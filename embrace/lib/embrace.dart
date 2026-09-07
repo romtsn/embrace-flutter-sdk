@@ -5,6 +5,7 @@ import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart'
     hide Severity;
 import 'package:embrace/embrace_api.dart';
 import 'package:embrace/src/embrace_frame_detector.dart';
+import 'package:embrace/src/embrace_hang_detector.dart';
 import 'package:embrace/src/embrace_startup_tracker.dart';
 import 'package:embrace/src/otel/otel.dart';
 import 'package:embrace/src/pointer_input_tracker.dart';
@@ -96,6 +97,15 @@ class Embrace implements EmbraceFlutterApi {
   @override
   Future<void> installErrorHandlers(FutureOr<void> Function() action) {
     return _installErrorHandlers(action);
+  }
+
+  @override
+  void disable() {
+    _runCatching('disable', () {
+      stopActiveFrameDetector();
+      stopActiveHangDetector();
+      _platform.disable();
+    });
   }
 
   @override
@@ -569,6 +579,7 @@ Future<void> _start(
   );
 
   EmbraceFrameDetector().start();
+  await EmbraceHangDetector().start();
 
   if (action != null) {
     await _installErrorHandlers(action);
